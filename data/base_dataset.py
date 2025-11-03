@@ -79,7 +79,7 @@ def get_params(opt, size):
     return {'crop_pos': (x, y), 'flip': flip}
 
 
-def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, convert=True):
+def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, convert=True, pan=False):
     transform_list = []
     if grayscale:
         transform_list.append(transforms.Grayscale(1))
@@ -89,7 +89,7 @@ def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, conve
         osize = [opt.load_size, opt.load_size]
         if "gta2cityscapes" in opt.dataroot:
             osize[0] = opt.load_size // 2
-        transform_list.append(transforms.Resize(osize, method))
+        transform_list.append(transforms.Resize(osize, method, antialias=True))
     elif 'scale_width' in opt.preprocess:
         transform_list.append(transforms.Lambda(lambda img: __scale_width(img, opt.load_size, opt.crop_size, method)))
     elif 'scale_shortside' in opt.preprocess:
@@ -126,13 +126,32 @@ def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, conve
         transform_list += [transforms.ToTensor()]
         if grayscale:
             transform_list += [transforms.Normalize((0.5,), (0.5,))]
+        elif opt.pan_data:
+            # transform_list += [transforms.Normalize((0.5, 0.5, 0.5, 0.5), (0.5, 0.5, 0.5, 0.5))]
+            if pan:
+                transform_list += [transforms.Normalize(( 0.0819,  0.0819,  0.0819,  0.0819), (0.0588, 0.0588, 0.0588, 0.0588))]
+            else:
+                transform_list += [transforms.Normalize((0.0621, 0.1099, 0.0844, 0.0775), (0.0447, 0.0534, 0.0318, 0.0571))]
+            # transform_list += []
         else:
             transform_list += [transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+    #print("Transform list:", transform_list)
     return transforms.Compose(transform_list)
 
 
+def normalize_npy(img):
+    n_channels = img.shape[0]
+    t_norm = transforms.Compose([
+            transforms.Normalize([0.5]*n_channels, [0.5]*n_channels)
+    ])
+    return t_norm(img)
+
+
 def __make_power_2(img, base, method=Image.BICUBIC):
-    ow, oh = img.size
+    if isinstance(img, Image.Image):
+        ow, oh = img.size
+    else:
+        _, oh, ow = img.shape
     h = int(round(oh / base) * base)
     w = int(round(ow / base) * base)
     if h == oh and w == ow:
@@ -228,3 +247,4 @@ def __print_size_warning(ow, oh, w, h):
               "(%d, %d). This adjustment will be done to all images "
               "whose sizes are not multiples of 4" % (ow, oh, w, h))
         __print_size_warning.has_printed = True
+

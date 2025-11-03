@@ -41,10 +41,16 @@ if __name__ == '__main__':
                 torch.cuda.synchronize()
             optimize_start_time = time.time()
             if epoch == opt.epoch_count and i == 0:
-                model.data_dependent_initialize(data,data2)
+                if opt.model == 'cut':
+                    model.data_dependent_initialize(data)
+                else:
+                    model.data_dependent_initialize(data, data2)
                 model.setup(opt)               # regular setup: load and print networks; create schedulers
                 model.parallelize()
-            model.set_input(data,data2)  # unpack data from dataset and apply preprocessing
+                if opt.model == 'cut':
+                    model.set_input(data)  # unpack data from dataset and apply preprocessing
+                else:
+                    model.set_input(data,data2)  # unpack data from dataset and apply preprocessing
             model.optimize_parameters()   # calculate loss functions, get gradients, update network weights
             if len(opt.gpu_ids) > 0:
                 torch.cuda.synchronize()

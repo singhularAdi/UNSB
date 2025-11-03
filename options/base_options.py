@@ -52,6 +52,13 @@ class BaseOptions():
         parser.add_argument('--tau', type=float, default=0.01, help='Entropy parameter')
         parser.add_argument('--no_antialias', action='store_true', help='if specified, use stride=2 convs instead of antialiased-downsampling (sad)')
         parser.add_argument('--no_antialias_up', action='store_true', help='if specified, use [upconv(learned filter)] instead of [upconv(hard-coded [1,3,3,1] filter), conv]')
+
+         # Options for zones: "GRS", "EZ", "NEB", "NTrZ", "SEB", "STrZ" --- For "NTB", "STB" we don't have data yet
+        parser.add_argument('--use_zone_pairs', default=False, action='store_true', help='if specified, uses B example from the same zone/belt as A')
+        parser.add_argument('--cycles', nargs='*', default=[], help='Which HST cycles to use for training with the unaligned_npy. If no argument is given then use all Cycles')
+        parser.add_argument('--PJs', nargs='*', default=[], help='Which JVH PJs to use for training with the unaligned_npy. If no argument is given then use all PJs')
+        parser.add_argument('--zones', nargs='*', default=[], help='Which zones to use for training with the unaligned_npy. If no argument is given then use all zones')
+
         # dataset parameters
         parser.add_argument('--dataset_mode', type=str, default='unaligned', help='chooses how datasets are loaded. [unaligned | aligned | single | colorization]')
         parser.add_argument('--direction', type=str, default='AtoB', help='AtoB or BtoA')
